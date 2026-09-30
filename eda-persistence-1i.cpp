@@ -1,0 +1,197 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+
+
+template<typename data_type>
+struct PersistentSegmentTree {
+    struct SegmentTreeNode {
+        data_type data;
+        int l, r;
+        SegmentTreeNode *left, *right;
+        SegmentTreeNode(data_type data, int l, int r, SegmentTreeNode* left, SegmentTreeNode* right): data(data), l(l), r(r), left(left), right(right) {}
+    };
+    vector<SegmentTreeNode*> version_roots;
+    PersistentSegmentTree(int n) {
+        version_roots.emplace_back(new SegmentTreeNode(data_type(), 0, n - 1, nullptr, nullptr));
+        build(version_roots[0]);
+    }
+    PersistentSegmentTree(int l, int r, vector<data_type> &a) {
+        version_roots.emplace_back(new SegmentTreeNode(data_type(), l, r, nullptr, nullptr));
+        build(version_roots[0], a);
+    }
+    void build(SegmentTreeNode *root) {
+        if (root -> l == root -> r) {
+            // -1 porque indexamos en 1
+            root -> data = data_type();
+            return;
+        }
+        int mi = (root -> l + root -> r) / 2;
+        root -> left = new SegmentTreeNode(data_type(), root -> l, mi, nullptr,nullptr);
+        root -> right = new SegmentTreeNode(data_type(), mi + 1, root -> r,nullptr, nullptr);
+        build(root -> left);
+        build(root -> right);
+        }
+    void build(SegmentTreeNode *root, vector<data_type> &a) {
+        if (root -> l == root -> r) {
+            // -1 porque indexamos en 1
+            root -> data = a[root -> l - 1];
+            return;
+        }
+        int mi = (root -> l + root -> r) / 2;
+        root -> left = new SegmentTreeNode(data_type(), root -> l, mi, nullptr, nullptr);
+        root -> right = new SegmentTreeNode(data_type(), mi + 1, root -> r,nullptr, nullptr);
+        build(root -> left, a);
+        build(root -> right, a);
+    }
+    void update(int pos, data_type value, SegmentTreeNode *last, SegmentTreeNode *curr) {
+        if (curr -> l == curr -> r) {
+            curr -> data = value;
+            return;
+        }
+        int mi = (curr -> l + curr -> r) / 2;
+        if (pos <= mi) {
+            curr -> right = last -> right;
+            curr -> left = new SegmentTreeNode(last -> left -> data, curr -> l, mi,
+            nullptr, nullptr);
+            update(pos, value, last -> left, curr -> left);
+        }
+        else {
+            curr -> left = last -> left;
+            curr -> right = new SegmentTreeNode(last -> right -> data, mi + 1, curr
+            -> r, nullptr, nullptr);
+            update(pos, value, last -> right, curr -> right);
+        }
+        curr -> data = curr -> left -> data + curr -> right -> data;
+    }
+    int update(int version, int pos, data_type value) {
+        SegmentTreeNode *root = new SegmentTreeNode(data_type(), version_roots[0]-> l, version_roots[0] -> r, nullptr, nullptr);
+        version_roots.emplace_back(root);
+        update(pos, value, version_roots[version], root);
+        return (int)version_roots.size() - 1;
+    }
+    data_type query(int x, int y, SegmentTreeNode *root) {
+        if (y < root -> l or root -> r < x or x > y) return data_type(0);
+        if (x <= root -> l and root -> r <= y) return root -> data;
+        return query(x, y, root -> left) + query(x, y, root -> right);
+    }
+    data_type query(int version, int x, int y) {
+        return query(x, y, version_roots[version]);
+    }
+    int get_current_version() {
+        return (int)version_roots.size() - 1;
+    }
+};
+
+template<typename data_type>
+struct PersistentFrequencySegmentTree {
+    struct SegmentTreeNode {
+        data_type data;
+        int l, r;
+        SegmentTreeNode *left, *right;
+        SegmentTreeNode(data_type data, int l, int r, SegmentTreeNode* left, SegmentTreeNode* right): data(data), l(l), r(r), left(left), right(right) {}
+    };
+    vector<SegmentTreeNode*> version_roots;
+    PersistentFrequencySegmentTree(int n) {
+        version_roots.emplace_back(new SegmentTreeNode(data_type(), 0, n - 1, nullptr, nullptr));
+        build(version_roots[0]);
+    }
+    PersistentFrequencySegmentTree(int l, int r, vector<data_type> &a) {
+        version_roots.emplace_back(new SegmentTreeNode(data_type(), l, r, nullptr, nullptr));
+        build(version_roots[0], a);
+    }
+    void build(SegmentTreeNode *root) {
+        if (root -> l == root -> r) {
+            // -1 porque indexamos en 1
+            root -> data = data_type();
+            return;
+        }
+        int mi = (root -> l + root -> r) / 2;
+        root -> left = new SegmentTreeNode(data_type(), root -> l, mi, nullptr,nullptr);
+        root -> right = new SegmentTreeNode(data_type(), mi + 1, root -> r,nullptr, nullptr);
+        build(root -> left);
+        build(root -> right);
+        }
+    void build(SegmentTreeNode *root, vector<data_type> &a) {
+        if (root -> l == root -> r) {
+            // -1 porque indexamos en 1
+            root -> data = a[root -> l - 1];
+            return;
+        }
+        int mi = (root -> l + root -> r) / 2;
+        root -> left = new SegmentTreeNode(data_type(), root -> l, mi, nullptr, nullptr);
+        root -> right = new SegmentTreeNode(data_type(), mi + 1, root -> r,nullptr, nullptr);
+        build(root -> left, a);
+        build(root -> right, a);
+    }
+    void update(int pos, data_type value, SegmentTreeNode *last, SegmentTreeNode *curr) {
+        if (curr -> l == curr -> r) {
+            curr -> data += value; //cambio está aquí
+            return;
+        }
+        int mi = (curr -> l + curr -> r) / 2;
+        if (pos <= mi) {
+            curr -> right = last -> right;
+            curr -> left = new SegmentTreeNode(last -> left -> data, curr -> l, mi,
+            nullptr, nullptr);
+            update(pos, value, last -> left, curr -> left);
+        }
+        else {
+            curr -> left = last -> left;
+            curr -> right = new SegmentTreeNode(last -> right -> data, mi + 1, curr
+            -> r, nullptr, nullptr);
+            update(pos, value, last -> right, curr -> right);
+        }
+        curr -> data = curr -> left -> data + curr -> right -> data;
+    }
+    int update(int version, int pos, data_type value) {
+        SegmentTreeNode *root = new SegmentTreeNode(data_type(), version_roots[0]-> l, version_roots[0] -> r, nullptr, nullptr);
+        version_roots.emplace_back(root);
+        update(pos, value, version_roots[version], root);
+        return (int)version_roots.size() - 1;
+    }
+    data_type query(int x, int y, SegmentTreeNode *root) {
+        if (y < root -> l or root -> r < x or x > y) return data_type(0);
+        if (x <= root -> l and root -> r <= y) return root -> data;
+        return query(x, y, root -> left) + query(x, y, root -> right);
+    }
+    data_type query(int version, int x, int y) {
+        return query(x, y, version_roots[version]);
+    }
+    int get_current_version() {
+        return (int)version_roots.size() - 1;
+    }
+};
+
+
+int main() {
+    cin.tie(0) -> sync_with_stdio(false);
+    int n; cin >> n;
+    vector<int> v(n); for (int i=0; i<n; ++i) cin >> v[i];
+    vector<int> compressor(v.begin(), v.end());
+    sort(compressor.begin(), compressor.end());
+    compressor.erase(unique(compressor.begin(), compressor.end()), compressor.end());
+    for (int i=0; i<n; ++i) v[i] = lower_bound(compressor.begin(), compressor.end(), v[i]) - compressor.begin();
+    PersistentFrequencySegmentTree<int> tree(n+1);
+    vector<int> nextindex(n); unordered_map<int, int> m;
+    for (int i=n-1; i>=0; --i) {
+        if (!m.count(v[i])) nextindex[i] = n;
+        else nextindex[i] = m[v[i]];
+        m[v[i]] = i;
+    }
+    for (int i=0; i<n; ++i) tree.update(i, nextindex[i], 1);
+    int q; cin >> q; int temp1, temp2;
+    for (int i=0; i<q; ++i) {
+        cin >> temp1 >> temp2;
+        cout << tree.query(temp2, temp2, n) - tree.query(temp1-1, temp2, n) << "\n";
+    }
+
+
+
+
+
+
+
+
+}
